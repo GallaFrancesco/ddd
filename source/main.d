@@ -4,9 +4,6 @@ import std.stdio;
 
 void main()
 {
-    InternalNode!bool n;
-    n.
-
-    DecisionTree!bool dt;
-
+    MDD!2 mdd;
 }
+
