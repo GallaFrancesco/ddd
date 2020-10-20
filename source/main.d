@@ -4,6 +4,6 @@ import std.stdio;
 
 void main()
 {
-    MDD!2 mdd;
+    // MDD!2 mdd;
 }
 
