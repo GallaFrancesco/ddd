@@ -1,0 +1,6 @@
+name "ddd"
+description "Decision diagrams in D"
+authors "fra"
+copyright "Copyright © 2020, fra"
+license "GPLv3"
+dependency "sumtype" version="~>0.10.1"
