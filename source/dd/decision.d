@@ -11,11 +11,12 @@ import std.conv;
 struct MDD
 {
 private:
-    ulong current_id = 0;
+    ulong current_id = 2;
 
 public:
     DDNode root;
-    ulong bound;
+    ulong bound = 2;
+    ulong id = 2;
     alias root this;
 
 /**
@@ -30,9 +31,10 @@ public:
     this(DDNode node) @safe
     {
         node.match!(
-                    (TT n)   { root = DDNode(n); bound = 1; },
-                    (FF n)   { root = DDNode(n); bound = 1; },
-                    (Node n) { root = DDNode(n); bound = n.size; current_id = n.id+1; }
+                    // bound of terminals is 0 since it is equal to the node size
+                    (TT n)   { root = DDNode(n); bound = 0; id = cast(ulong)n.val; },
+                    (FF n)   { root = DDNode(n); bound = 0; id = cast(ulong)n.val; },
+                    (Node n) { root = DDNode(n); bound = n.size; id = n.id; current_id = n.id+1; }
                     );
     }
 
@@ -52,6 +54,7 @@ public:
 /**
  * Utilities
  */
+
     ulong nextID() @safe
     {
         // TODO non mi piace, serve un CONTESTO
@@ -139,6 +142,7 @@ unittest
 
     assert(bdd.getEdge(0).isTT());
     assert(!bdd.getEdge(1).isTerminal());
-    assert(n.id == 1);
+    // assert(bdd.id == 2);
+    assert(n.id == 3);
 }
 
