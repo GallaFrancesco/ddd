@@ -12,11 +12,15 @@ struct MDD
 {
 private:
     ulong current_id = 0;
+
 public:
     _DDNode root;
     ulong bound;
     alias root this;
 
+/**
+ * Constructors
+ */
     this(ulong b) @safe
     {
         root = Node(b, current_id++);
@@ -33,6 +37,9 @@ public:
 
     }
 
+/**
+ * Edge creation and evaluation
+ */
     void createEdge(immutable ulong label, MDD mdd) @safe
     {
         root.tryMatch!((Node n) => n.createEdge(label, mdd.root));
@@ -43,23 +50,36 @@ public:
         return root.tryMatch!((Node n) => MDD(n.getEdge(label)));
     }
 
-    ulong size() @safe
-    {
-        return root.tryMatch!((Node n) => n.size);
-    }
-        
+/**
+ * Utilities
+ */
     ulong id() @safe
     {
         return root.tryMatch!((Node n) => n.id);
     }
 
-    bool isTerminal() @safe
+
+    bool isTT() @safe
+    {
+        return root.match!(
+                           (Node n) => false,
+                           (FF f) => false,
+                           (TT t) => true
+                           );
+    }
+
+    bool isFF() @safe
     {
         return root.match!(
                            (Node n) => false,
                            (FF f) => true,
-                           (TT t) => true
+                           (TT t) => false
                            );
+    }
+
+    bool isTerminal() @safe
+    {
+        return isTT() || isFF();
     }
 }
 
@@ -69,6 +89,9 @@ alias asNode = _DDNode;
 struct TT { bool val = true; } // terminal TRUE
 struct FF { bool val = false; } // terminal FALSE
 
+/**
+ * Internal node representation
+ */
 struct Node
 {
 private:
@@ -101,33 +124,18 @@ public:
     }
 }
 
-/**
- * Operations
- */
-enum MDD_OP { OP1, OP2 }
-
-MDD apply(MDD X, MDD Y, immutable MDD_OP op) @safe
+unittest
 {
-    assert(X.bound == Y.bound, "MDDs must have the same variable bound for apply");
+    // initialize a MDD with bound 2 (a BDD) and two terminal nodes
+    auto t = TT();
+    auto f = FF();
+    auto bdd = MDD(2);
 
-    if(X.isTerminal && Y.isTerminal) return boolApply(X, Y, op);
+    // add two edges with terminal nodes as target
+    bdd.createEdge(0, MDD(asNode(t)));
+    bdd.createEdge(1, MDD(asNode(f)));
 
-    // TODO cache
-    ulong d = X.bound;
-    MDD res = MDD(d);
-
-    foreach(i; iota(0,d)) {
-        // TODO wrapper around sumtype
-        res.createEdge(i, apply(X.getEdge(i), Y.getEdge(i), op));
-    }
-
-    return res;
+    assert(bdd.getEdge(0).isTT());
+    assert(bdd.getEdge(1).isFF());
 }
 
-MDD boolApply(MDD X, MDD Y, immutable MDD_OP op) @safe
-{
-    // static assert((is(X == TT) || is(X == FF)) &&
-    //           (is(Y == TT) || is(Y == FF)));
-    TT t;
-    return MDD(asNode(t));
-}
