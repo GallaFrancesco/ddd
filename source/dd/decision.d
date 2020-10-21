@@ -6,7 +6,7 @@ import std.range;
 import std.conv;
 
 /**
- * Wrapper around the root nodes of MDDs
+ * MDD: Wrapper around the root nodes (DDNode)
  */
 struct MDD
 {
@@ -14,7 +14,7 @@ private:
     ulong current_id = 0;
 
 public:
-    _DDNode root;
+    DDNode root;
     ulong bound;
     alias root this;
 
@@ -27,14 +27,13 @@ public:
         bound = b;
     }
 
-    this(_DDNode node) @safe
+    this(DDNode node) @safe
     {
         node.match!(
-                    (TT n)   { root = asNode(n); bound = 1; },
-                    (FF n)   { root = asNode(n); bound = 1; },
-                    (Node n) { root = asNode(n); bound = n.size; current_id = n.id+1; }
+                    (TT n)   { root = DDNode(n); bound = 1; },
+                    (FF n)   { root = DDNode(n); bound = 1; },
+                    (Node n) { root = DDNode(n); bound = n.size; current_id = n.id+1; }
                     );
-
     }
 
 /**
@@ -53,9 +52,10 @@ public:
 /**
  * Utilities
  */
-    ulong id() @safe
+    ulong nextID() @safe
     {
-        return root.tryMatch!((Node n) => n.id);
+        // TODO non mi piace, serve un CONTESTO
+        return current_id++;
     }
 
 
@@ -83,8 +83,7 @@ public:
     }
 }
 
-alias _DDNode = SumType!(Node, TT, FF);
-alias asNode = _DDNode;
+alias DDNode = SumType!(Node, TT, FF);
 
 struct TT { bool val = true; } // terminal TRUE
 struct FF { bool val = false; } // terminal FALSE
@@ -95,7 +94,7 @@ struct FF { bool val = false; } // terminal FALSE
 struct Node
 {
 private:
-    _DDNode[] children;
+    DDNode[] children;
 public:
     immutable ulong id;          // TODO enforce unique
     immutable ulong size;
@@ -105,19 +104,19 @@ public:
         size = sz;
         id = ident;
         foreach(ref c; iota(0,sz)) {
-            children ~= _DDNode(FF());
+            children ~= DDNode(FF());
         }
     }
 
     // set the target node of an edge
-    void createEdge(immutable ulong label, _DDNode node) @safe
+    void createEdge(immutable ulong label, DDNode node) @safe
     {
         assert(label < size, "Invalid label for createEdge");
         children[label] = node;
     }
 
     // get the node for edge label
-    _DDNode getEdge(immutable ulong label) @safe
+    DDNode getEdge(immutable ulong label) @safe
     {
         assert(label < size, "Invalid label for getEdge");
         return children[label];
@@ -127,15 +126,19 @@ public:
 unittest
 {
     // initialize a MDD with bound 2 (a BDD) and two terminal nodes
+    auto bdd = MDD(2);
     auto t = TT();
     auto f = FF();
-    auto bdd = MDD(2);
+    auto n = Node(2, bdd.nextID());
 
     // add two edges with terminal nodes as target
-    bdd.createEdge(0, MDD(asNode(t)));
-    bdd.createEdge(1, MDD(asNode(f)));
+    n.createEdge(0, MDD(DDNode(f)));
+    n.createEdge(1, MDD(DDNode(t)));
+    bdd.createEdge(0, MDD(DDNode(t)));
+    bdd.createEdge(1, MDD(DDNode(n)));
 
     assert(bdd.getEdge(0).isTT());
-    assert(bdd.getEdge(1).isFF());
+    assert(!bdd.getEdge(1).isTerminal());
+    assert(n.id == 1);
 }
 

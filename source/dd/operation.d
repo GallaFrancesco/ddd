@@ -31,6 +31,6 @@ MDD boolApply(MDD X, MDD Y, immutable MDD_OP op) @safe
 {
     // TODO complete
     TT t;
-    return MDD(asNode(t));
+    return MDD(DDNode(t));
 }
 
