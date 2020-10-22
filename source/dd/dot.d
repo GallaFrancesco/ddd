@@ -6,22 +6,23 @@ import std.stdio;
 import std.range;
 import std.conv : to;
 
-void printDot(MDD mdd, immutable string outname) @trusted
+void printDot(DD)(DD mdd, immutable string outname) @trusted
 {
     auto outf = File(outname, "w");
     printDot(mdd, outf);
 }
 
-void printDot(MDD mdd, File outf) @trusted
+void printDot(DD)(DD mdd, File outf) @trusted
 {
     outf.write("digraph G{\n");
     _printDotImpl(mdd, outf);
     outf.write("}\n");
 }
 
-void _printDotImpl(MDD mdd, File outf) @trusted
+void _printDotImpl(DD)(DD mdd, File outf) @trusted
 {
-    foreach(i; iota(0,mdd.bound)) {
+    import std.stdio;
+    foreach(i; iota(0, mdd.bound)) {
         auto child = mdd.getEdge(i);
         if(!child.isFF()) {
             string cid = (child.isTT()) ? "T" : to!string(child.id);
@@ -55,4 +56,9 @@ unittest
     string dot = "bdd.dot";
     writeln("[dot] Saving file: "~dot);
     bdd.printDot(dot);
+
+    auto robdd = ROMDD(bdd);
+    dot = "robdd.dot";
+    writeln("[dot] Saving file: "~dot);
+    robdd.printDot(dot);
 }

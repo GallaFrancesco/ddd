@@ -15,34 +15,31 @@ public:
     MDD[string] cache; // cache for the reduction algorithm
     alias mdd this;
 
-    this(DDNode node) @safe
-    {
-        mdd = reduce(MDD(node), "");
-    }
+    this(MDD mdd) @safe { mdd = reduce(mdd); }
+    this(DDNode node) @safe { mdd = reduce(MDD(node)); }
+    this(ulong b, ref DDContext ctx) @safe { mdd = reduce(MDD(b, ctx)); }
 
-    this(ulong b, ref DDContext ctx) @safe
-    {
-        mdd = reduce(MDD(b, ctx), "");
-    }
-
-    MDD reduce(MDD dd, string recur) @safe
+    MDD reduce(MDD dd, string recur="") @safe
     {
         import std.stdio;
         immutable key = computeHash(dd);
-        writeln(recur~to!string(dd.id));
-        writeln(recur~to!string(dd));
-        writeln(recur~to!string(key));
-        writeln(recur~to!string(cache));
+        writeln(recur~"cache: "~to!string(cache));
+        writeln(recur~"id: "~to!string(dd.id));
+        writeln(recur~"key: "~to!string(key));
         if(key in cache) {
+            writeln(recur~"hit (before): "~to!string(dd));
             return cache[key];
         }
         foreach(i; iota(0, dd.bound)) {
             dd.createEdge(i, reduce(dd.getEdge(i), recur~"- "));
         }
         if(key in cache) {
+            writeln(recur~"hit (after): "~to!string(dd));
             return cache[key];
         }
+        writeln(recur~"insert: "~to!string(dd));
         cache[key] = dd;
+        writeln(recur~"---");
         return dd;
     }
 
@@ -181,16 +178,17 @@ unittest
 {
     // initialize a ROMDD with bound 2 (a BDD) and two terminal nodes
     DDContext ctx;
-    auto bdd = ROMDD(2, ctx);
+    auto bdd = MDD(2, ctx);
     auto t = TT();
     auto f = FF();
     auto n = Node(2, ctx.nextID());
 
     // add two edges with terminal nodes as target
-    n.createEdge(0, ROMDD(DDNode(f)));
-    n.createEdge(1, ROMDD(DDNode(t)));
-    bdd.createEdge(0, ROMDD(DDNode(t)));
-    bdd.createEdge(1, ROMDD(DDNode(n)));
+    n.createEdge(0, MDD(DDNode(f)));
+    n.createEdge(1, MDD(DDNode(t)));
+    bdd.createEdge(0, MDD(DDNode(t)));
+    bdd.createEdge(1, MDD(DDNode(n)));
+
 
     assert(bdd.getEdge(0).isTT());
     assert(!bdd.getEdge(1).isTerminal());
@@ -198,9 +196,9 @@ unittest
     assert(n.id == 3);
 
     import std.stdio;
-    foreach(kv; bdd.cache.byKeyValue) {
+    auto robdd = ROMDD(bdd);
+    foreach(kv; robdd.cache.byKeyValue) {
         writeln(kv.key ~ ": " ~to!string(kv.value));
     }
-
 }
 
