@@ -6,14 +6,54 @@ import std.range;
 import std.conv;
 
 /**
- * MDD: Wrapper around the root nodes (DDNode)
+ * Reduced, Ordered MDD
+ */
+struct ROMDD
+{
+public:
+    MDD mdd;
+    MDD[string] cache; // cache for the reduction algorithm
+    alias mdd this;
+
+    this(DDNode node) @safe
+    {
+        mdd = reduce(MDD(node));
+    }
+
+    this(ulong b, ref DDContext ctx) @safe
+    {
+        mdd = reduce(MDD(b, ctx));
+    }
+
+    MDD reduce(MDD dd) @safe
+    {
+        immutable key = computeHash(dd);
+        if(key in cache) return cache[key];
+        foreach(i; iota(0, dd.bound)) {
+            dd.createEdge(i, reduce(dd.getEdge(i)));
+        }
+        if(key in cache) return cache[key];
+        cache[key] = dd;
+        return dd;
+    }
+
+    string computeHash(MDD dd) @safe
+    {
+        string hash;
+        if(dd.isTT) hash ~= "1";
+        if(dd.isTT) hash ~= "0";
+        foreach(i; iota(0,dd.bound)) {
+            hash ~= to!string(dd.getEdge(i).id);
+        }
+        return hash;
+    }
+}
+
+/**
+ * MDD (also, DDNode wrapper), implicitly ordered
  */
 struct MDD
 {
-private:
-    ulong current_id = 2;
-
-public:
     DDNode root;
     ulong bound = 2;
     ulong id = 2;
@@ -22,9 +62,10 @@ public:
 /**
  * Constructors
  */
-    this(ulong b) @safe
+    this(ulong b, ref DDContext ctx) @safe
     {
-        root = Node(b, current_id++);
+        id = ctx.current_id++;
+        root = Node(b, id);
         bound = b;
     }
 
@@ -34,7 +75,7 @@ public:
                     // bound of terminals is 0 since it is equal to the node size
                     (TT n)   { root = DDNode(n); bound = 0; id = cast(ulong)n.val; },
                     (FF n)   { root = DDNode(n); bound = 0; id = cast(ulong)n.val; },
-                    (Node n) { root = DDNode(n); bound = n.size; id = n.id; current_id = n.id+1; }
+                    (Node n) { root = DDNode(n); bound = n.size; id = n.id; }
                     );
     }
 
@@ -54,14 +95,6 @@ public:
 /**
  * Utilities
  */
-
-    ulong nextID() @safe
-    {
-        // TODO non mi piace, serve un CONTESTO
-        return current_id++;
-    }
-
-
     bool isTT() @safe
     {
         return root.match!(
@@ -106,7 +139,7 @@ public:
     {
         size = sz;
         id = ident;
-        foreach(ref c; iota(0,sz)) {
+        foreach(_; iota(0,sz)) {
             children ~= DDNode(FF());
         }
     }
@@ -126,23 +159,36 @@ public:
     }
 }
 
+/**
+ * Store all runtime context: (Node IDs for now)
+ */
+struct DDContext
+{
+    ulong current_id = 2; // terminals are always id 0 and 1
+    ulong nextID() @safe { return current_id++; }
+}
+
 unittest
 {
-    // initialize a MDD with bound 2 (a BDD) and two terminal nodes
-    auto bdd = MDD(2);
+    // initialize a ROMDD with bound 2 (a BDD) and two terminal nodes
+    DDContext ctx;
+    auto bdd = ROMDD(2, ctx);
     auto t = TT();
     auto f = FF();
-    auto n = Node(2, bdd.nextID());
+    auto n = Node(2, ctx.nextID());
 
     // add two edges with terminal nodes as target
-    n.createEdge(0, MDD(DDNode(f)));
-    n.createEdge(1, MDD(DDNode(t)));
-    bdd.createEdge(0, MDD(DDNode(t)));
-    bdd.createEdge(1, MDD(DDNode(n)));
+    n.createEdge(0, ROMDD(DDNode(f)));
+    n.createEdge(1, ROMDD(DDNode(t)));
+    bdd.createEdge(0, ROMDD(DDNode(t)));
+    bdd.createEdge(1, ROMDD(DDNode(n)));
 
     assert(bdd.getEdge(0).isTT());
     assert(!bdd.getEdge(1).isTerminal());
-    // assert(bdd.id == 2);
+    assert(bdd.id == 2);
     assert(n.id == 3);
+
+    import std.stdio;
+    writeln(bdd.cache);
 }
 

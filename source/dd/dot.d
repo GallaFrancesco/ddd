@@ -35,16 +35,16 @@ void _printDotImpl(MDD mdd, File outf) @trusted
             _printDotImpl(child, outf);
         }
     }
-
 }
 
 unittest
 {
     // initialize a MDD with bound 2 (a BDD) and two terminal nodes
-    auto bdd = MDD(2);
+    DDContext ctx;
+    auto bdd = MDD(2,ctx);
     auto t = TT();
     auto f = FF();
-    auto n = Node(2, bdd.nextID());
+    auto n = Node(2, ctx.nextID());
 
     // add two edges with terminal nodes as target
     n.createEdge(0, MDD(DDNode(f)));
@@ -53,6 +53,6 @@ unittest
     bdd.createEdge(1, MDD(DDNode(n)));
 
     string dot = "bdd.dot";
-    writeln("Writing "~dot);
+    writeln("[dot] Saving file: "~dot);
     bdd.printDot(dot);
 }

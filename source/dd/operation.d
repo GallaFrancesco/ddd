@@ -9,7 +9,7 @@ import std.range;
  */
 enum MDD_OP { OP1, OP2 }
 
-MDD apply(MDD X, MDD Y, immutable MDD_OP op) @safe
+MDD apply(MDD X, MDD Y, immutable MDD_OP op, ref DDContext ctx) @safe
 {
     assert(X.bound == Y.bound, "MDDs must have the same variable bound for apply");
 
@@ -17,11 +17,11 @@ MDD apply(MDD X, MDD Y, immutable MDD_OP op) @safe
 
     // TODO cache
     ulong d = X.bound;
-    MDD res = MDD(d);
+    MDD res = MDD(d, ctx);
 
     foreach(i; iota(0,d)) {
         // TODO wrapper around sumtype
-        res.createEdge(i, apply(X.getEdge(i), Y.getEdge(i), op));
+        res.createEdge(i, apply(X.getEdge(i), Y.getEdge(i), op, ctx));
     }
 
     return res;
