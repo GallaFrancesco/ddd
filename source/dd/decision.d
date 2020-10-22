@@ -17,22 +17,31 @@ public:
 
     this(DDNode node) @safe
     {
-        mdd = reduce(MDD(node));
+        mdd = reduce(MDD(node), "");
     }
 
     this(ulong b, ref DDContext ctx) @safe
     {
-        mdd = reduce(MDD(b, ctx));
+        mdd = reduce(MDD(b, ctx), "");
     }
 
-    MDD reduce(MDD dd) @safe
+    MDD reduce(MDD dd, string recur) @safe
     {
+        import std.stdio;
         immutable key = computeHash(dd);
-        if(key in cache) return cache[key];
-        foreach(i; iota(0, dd.bound)) {
-            dd.createEdge(i, reduce(dd.getEdge(i)));
+        writeln(recur~to!string(dd.id));
+        writeln(recur~to!string(dd));
+        writeln(recur~to!string(key));
+        writeln(recur~to!string(cache));
+        if(key in cache) {
+            return cache[key];
         }
-        if(key in cache) return cache[key];
+        foreach(i; iota(0, dd.bound)) {
+            dd.createEdge(i, reduce(dd.getEdge(i), recur~"- "));
+        }
+        if(key in cache) {
+            return cache[key];
+        }
         cache[key] = dd;
         return dd;
     }
@@ -41,7 +50,7 @@ public:
     {
         string hash;
         if(dd.isTT) hash ~= "1";
-        if(dd.isTT) hash ~= "0";
+        if(dd.isFF) hash ~= "0";
         foreach(i; iota(0,dd.bound)) {
             hash ~= to!string(dd.getEdge(i).id);
         }
@@ -189,6 +198,9 @@ unittest
     assert(n.id == 3);
 
     import std.stdio;
-    writeln(bdd.cache);
+    foreach(kv; bdd.cache.byKeyValue) {
+        writeln(kv.key ~ ": " ~to!string(kv.value));
+    }
+
 }
 
