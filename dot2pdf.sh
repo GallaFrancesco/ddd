@@ -7,4 +7,4 @@ fi
 
 out=${1%.*}
 dot -Tpdf $1 -o $out.pdf
-echo "Generated $out.pdf"
+echo "[dot] Generated $out.pdf"

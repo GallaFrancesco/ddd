@@ -218,9 +218,8 @@ unittest
     auto f = FF();
     auto n = Node(2, ctx.nextID());
     auto nn = Node(2, ctx.nextID());
-    auto rn = Node(2, ctx.nextID());
+    auto rn = Node(2, ctx.nextID()); // rn == nn, should be reduced
 
-    // add two edges with terminal nodes as target
     n.createEdge(0, MDD(DDNode(f)));
     n.createEdge(1, MDD(DDNode(t)));
     nn.createEdge(0, MDD(DDNode(t)));
@@ -235,6 +234,7 @@ unittest
     assert(bdd.id == 2);
     assert(n.id == 3);
     assert(nn.id == 4);
+    assert(rn.id == 5);
 
     import dd.dot;
     string dot = "bdd.dot";

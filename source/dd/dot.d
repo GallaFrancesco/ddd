@@ -9,24 +9,29 @@ debug {
     import std.stdio;
 }
 
-void printDot(DD)(ref DD mdd, immutable string outname) @trusted
+void printDot(DD)(DD mdd, immutable string outname) @trusted
 {
     auto outf = File(outname, "w");
     printDot(mdd, outf);
 }
 
-void printDot(DD)(ref DD mdd, File outf) @trusted
+void printDot(DD)(DD mdd, File outf) @trusted
 {
     outf.write("digraph G{\n");
-    _printDotImpl(mdd, outf);
+    MDD[ulong] visited;
+    _printDotImpl(mdd, outf, visited);
     outf.write("}\n");
 }
 
-void _printDotImpl(DD)(ref DD mdd, File outf) @trusted
+void _printDotImpl(DD)(DD mdd, File outf, DD[ulong] visited) @trusted
 {
+    if(mdd.id in visited) return;
+
+    visited[mdd.id] = mdd;
+
     foreach(i; iota(0, mdd.bound)) {
-        // debug { writeln("[_printDotImpl] MDD bound: "~to!string(mdd.bound)~", label: "~to!string(i)); }
         auto child = mdd.getEdge(i);
+        // debug { writeln("[_printDotImpl] MDD id: "~to!string(mdd.id)~", --("~to!string(i)~")--> "~to!string(child.id)); }
         if(!child.isFF()) {
             string cid = (child.isTT()) ? "T" : to!string(child.id);
             outf.write(
@@ -36,7 +41,7 @@ void _printDotImpl(DD)(ref DD mdd, File outf) @trusted
                        ~ " [label = "
                        ~ to!string(i)
                        ~ " ]\n");
-            _printDotImpl(child, outf);
+            _printDotImpl(child, outf, visited);
         }
     }
 }
