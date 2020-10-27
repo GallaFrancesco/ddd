@@ -1,11 +1,11 @@
-DOT=bdd.dot
+DOT=bdd.dot robdd.dot
 
 all:
 	@dub build
 release:
 	@dub build -b release
 test:
-	@dub test; echo -n "[dot] Processing: ${DOT}... "; ./dot2pdf.sh ${DOT}
+	@dub test; for df in ${DOT}; do echo -n "[dot] Processing: $$df... "; ./dot2pdf.sh $$df; done;
 upgrade:
 	@dub upgrade
 clean:
