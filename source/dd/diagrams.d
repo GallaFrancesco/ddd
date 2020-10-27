@@ -1,4 +1,4 @@
-module dd.decision;
+module dd.diagrams;
 
 import sumtype;
 
@@ -6,6 +6,15 @@ import std.range;
 import std.conv;
 debug{
     import std.stdio;
+}
+
+/**
+ * Store all runtime context: (Node IDs for now)
+ */
+struct DDContext
+{
+    ulong current_id = 2; // terminals are always id 0 and 1
+    ulong nextID() @safe { return current_id++; }
 }
 
 /**
@@ -154,6 +163,7 @@ struct MDD
     }
 }
 
+
 alias DDNode = SumType!(Node, TT, FF);
 
 struct TT { bool val = true; } // terminal TRUE
@@ -196,15 +206,6 @@ public:
         assert(label < size, "Invalid label for getEdge");
         return children[label];
     }
-}
-
-/**
- * Store all runtime context: (Node IDs for now)
- */
-struct DDContext
-{
-    ulong current_id = 2; // terminals are always id 0 and 1
-    ulong nextID() @safe { return current_id++; }
 }
 
 unittest

@@ -1,13 +1,20 @@
 module dd.operation;
 
-import dd.decision;
+import dd.diagrams;
 
 import std.range;
+import std.conv;
 
 /**
  * MDD Operations
  */
-enum MDD_OP { OP1, OP2 }
+enum MDD_OP { UNION, INTERSECTION }
+
+string[MDD_OP] BOOLEAN_OPS;
+static this() {
+    BOOLEAN_OPS[MDD_OP.UNION] = "||";
+    BOOLEAN_OPS[MDD_OP.INTERSECTION] = "&&";
+}
 
 MDD apply(MDD X, MDD Y, immutable MDD_OP op, ref DDContext ctx) @safe
 {
@@ -20,7 +27,6 @@ MDD apply(MDD X, MDD Y, immutable MDD_OP op, ref DDContext ctx) @safe
     MDD res = MDD(d, ctx);
 
     foreach(i; iota(0,d)) {
-        // TODO wrapper around sumtype
         res.createEdge(i, apply(X.getEdge(i), Y.getEdge(i), op, ctx));
     }
 
@@ -29,8 +35,15 @@ MDD apply(MDD X, MDD Y, immutable MDD_OP op, ref DDContext ctx) @safe
 
 MDD boolApply(MDD X, MDD Y, immutable MDD_OP op) @safe
 {
-    // TODO complete
-    TT t;
-    return MDD(DDNode(t));
+    assert(X.isTerminal() && Y.isTerminal(), "boolApply must be called on two terminal nodes");
+    assert(op in BOOLEAN_OPS, "boolApply must be called on a boolean operation, invalid op: "~to!string(op));
+
+    string bop = BOOLEAN_OPS[op];
+
+    // static foreach(
+}
+
+unittest {
+
 }
 

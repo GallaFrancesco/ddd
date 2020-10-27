@@ -1,6 +1,6 @@
 module dd.dot;
 
-import dd.decision;
+import dd.diagrams;
 
 import std.stdio;
 import std.range;

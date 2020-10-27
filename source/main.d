@@ -1,4 +1,4 @@
-import dd.decision;
+import dd.diagrams;
 
 import std.stdio;
 
