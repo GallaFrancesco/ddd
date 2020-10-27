@@ -50,8 +50,7 @@ public:
     string computeHash(MDD dd) @safe
     {
         string hash;
-        if(dd.isTT) hash ~= "1";
-        if(dd.isFF) hash ~= "0";
+        if(dd.isTerminal) hash ~= to!string(dd.value);
 
         foreach(i; iota(0,dd.bound)) {
             hash ~= to!string(dd.getEdge(i).id);
@@ -115,27 +114,22 @@ struct MDD
 /**
  * Utilities
  */
-    bool isTT() @safe
+    bool value() @safe
     {
-        return root.match!(
-                           (Node n) => false,
+        assert(isTerminal());
+        return root.tryMatch!(
                            (FF f) => false,
                            (TT t) => true
                            );
     }
 
-    bool isFF() @safe
-    {
-        return root.match!(
-                           (Node n) => false,
-                           (FF f) => true,
-                           (TT t) => false
-                           );
-    }
-
     bool isTerminal() @safe
     {
-        return isTT() || isFF();
+        return root.match!(
+                           (FF f) => true,
+                           (TT t) => true,
+                           (Node n) => false
+                           );
     }
 
     debug {
@@ -163,6 +157,8 @@ struct MDD
     }
 }
 
+MDD asMDD(X)(X x)
+     if(is(X == TT) || is(X == FF) || is(X == Node)) { return MDD(DDNode(x)); }
 
 alias DDNode = SumType!(Node, TT, FF);
 
@@ -221,16 +217,15 @@ unittest
     auto nn = Node(2, ctx.nextID());
     auto rn = Node(2, ctx.nextID()); // rn == nn, should be reduced
 
-    n.createEdge(0, MDD(DDNode(f)));
-    n.createEdge(1, MDD(DDNode(t)));
-    nn.createEdge(0, MDD(DDNode(t)));
-    nn.createEdge(1, MDD(DDNode(n)));
-    rn.createEdge(0, MDD(DDNode(t)));
-    rn.createEdge(1, MDD(DDNode(n)));
-    bdd.createEdge(0, MDD(DDNode(rn)));
-    bdd.createEdge(1, MDD(DDNode(nn)));
+    n.createEdge(0, asMDD(f));
+    n.createEdge(1, asMDD(t));
+    nn.createEdge(0, asMDD(t));
+    nn.createEdge(1, asMDD(n));
+    rn.createEdge(0, asMDD(t));
+    rn.createEdge(1, asMDD(n));
+    bdd.createEdge(0, asMDD(rn));
+    bdd.createEdge(1, asMDD(nn));
 
-    assert(!bdd.getEdge(0).isTT());
     assert(!bdd.getEdge(1).isTerminal());
     assert(bdd.id == 2);
     assert(n.id == 3);

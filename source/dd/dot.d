@@ -32,8 +32,8 @@ void _printDotImpl(DD)(DD mdd, File outf, DD[ulong] visited) @trusted
     foreach(i; iota(0, mdd.bound)) {
         auto child = mdd.getEdge(i);
         // debug { writeln("[_printDotImpl] MDD id: "~to!string(mdd.id)~", --("~to!string(i)~")--> "~to!string(child.id)); }
-        if(!child.isFF()) {
-            string cid = (child.isTT()) ? "T" : to!string(child.id);
+        if(!(child.isTerminal() && child.value == 0)) {
+            string cid = (child.isTerminal()) ? "T" : to!string(child.id);
             outf.write(
                        to!string(mdd.id)
                        ~ " -> "
