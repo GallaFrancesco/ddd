@@ -148,7 +148,7 @@ struct MDD
                       (FF f) { writeln(recur~to!string(f)); },
                       (Node n) {
                           writeln(recur~to!string(n));
-                          writeln(recur~to!string(n.children));
+                          writeln(recur~"-> with edges to: "~to!string(n.children));
                           foreach(nn; n.children) {
                               _dumpDDImpl(nn, recur~"+ ");
                           }
@@ -167,6 +167,7 @@ struct FF { bool val = false; } // terminal FALSE
 
 /**
  * Internal node representation
+ * TODO levels!
  */
 struct Node
 {

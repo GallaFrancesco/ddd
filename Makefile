@@ -1,4 +1,4 @@
-DOT=bdd.dot robdd.dot
+DOT=bdd.dot robdd.dot x.dot y.dot apply_union_robdd.dot 
 
 all:
 	@dub build

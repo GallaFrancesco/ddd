@@ -6,5 +6,5 @@ if [[ $# -ne 1 ]]; then
 fi
 
 out=${1%.*}
-dot -Tpdf $1 -o $out.pdf
+dot -Tpdf $1 -o plots/$out.pdf
 echo "Generated $out.pdf"
