@@ -88,22 +88,16 @@ struct MDD
                     );
     }
 
-    ulong bound() @safe
-    {
-        return root.match!(
-                    // bound of terminals is 0 since it is equal to the node size
-                    (TT n)   => 0,
-                    (FF n)   => 0,
-                    (Node n) => n.size
-                    );
-    }
-
 /**
  * Edge creation and evaluation
  */
     void createEdge(immutable ulong label, MDD mdd) @safe
     {
-        root.tryMatch!((Node n) => n.createEdge(label, mdd.root));
+        root.tryMatch!(
+                       (ref Node n) {
+                           n.updateLevel(mdd.level+1);
+                           n.createEdge(label, mdd.root);
+                       });
     }
 
     MDD getEdge(immutable ulong label) @safe
@@ -114,6 +108,16 @@ struct MDD
 /**
  * Utilities
  */
+    ulong bound() @safe
+    {
+        return root.match!(
+                    // bound of terminals is 0 since it is equal to the node size
+                    (TT n)   => 0,
+                    (FF n)   => 0,
+                    (Node n) => n.size
+                    );
+    }
+
     bool value() @safe
     {
         assert(isTerminal());
@@ -132,6 +136,14 @@ struct MDD
                            );
     }
 
+    ulong level() @safe
+    {
+        return root.match!(
+                           (TT t) => 0,
+                           (FF f) => 0,
+                           (Node n) => n.level);
+    }
+
     debug {
         void dumpDD() @trusted
         {
@@ -147,6 +159,7 @@ struct MDD
                       (TT t) { writeln(recur~to!string(t)); },
                       (FF f) { writeln(recur~to!string(f)); },
                       (Node n) {
+                          writeln("LEVEL: "~to!string(n.level));
                           writeln(recur~to!string(n));
                           writeln(recur~"-> with edges to: "~to!string(n.children));
                           foreach(nn; n.children) {
@@ -173,8 +186,9 @@ struct Node
 {
 public:
     DDNode[] children;
-    immutable ulong id;          // TODO enforce unique
-    ulong size;
+    immutable ulong id;          // TODO set unique id per node
+    ulong size;                  // node variable bound
+    ulong level;                 // level (set by parent MDD)
 
     this(immutable ulong sz, immutable ulong ident) @safe
     {
@@ -190,10 +204,12 @@ public:
     {
         assert(label < size, "Invalid label for createEdge");
         node.match!(
-                    (TT t) {},
-                    (FF f) {},
-                    (Node n) { size = (n.size > size) ? n.size : size; }
-                    );
+                    (TT t) { updateLevel(1); },
+                    (FF f) { updateLevel(1); },
+                    (Node n) {
+                        updateLevel(n.level + 1);
+                        size = (n.size > size) ? n.size : size;
+                    });
         children[label] = node;
     }
 
@@ -202,6 +218,12 @@ public:
     {
         assert(label < size, "Invalid label for getEdge");
         return children[label];
+    }
+
+    // set the max between current and new level
+    void updateLevel(immutable ulong lvl) @safe
+    {
+        level = (lvl > level) ? lvl : level;
     }
 }
 

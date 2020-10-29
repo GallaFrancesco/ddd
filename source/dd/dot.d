@@ -35,9 +35,9 @@ void _printDotImpl(DD)(DD mdd, File outf, DD[ulong] visited) @trusted
         if(!(child.isTerminal() && child.value == 0)) {
             string cid = (child.isTerminal()) ? "T" : to!string(child.id);
             outf.write(
-                       to!string(mdd.id)
+                       "n"~to!string(mdd.id)~"_"~to!string(mdd.level)
                        ~ " -> "
-                       ~ cid
+                       ~ "n"~cid~"_"~to!string(child.level)
                        ~ " [label = "
                        ~ to!string(i)
                        ~ " ]\n");
