@@ -144,6 +144,11 @@ struct MDD
                            (Node n) => n.level);
     }
 
+    void updateLevel(immutable ulong lvl) @safe
+    {
+        root.tryMatch!((Node n) => n.updateLevel(lvl));
+    }
+
     debug {
         void dumpDD() @trusted
         {

@@ -25,13 +25,6 @@ ROMDD apply(ROMDD X, ROMDD Y, immutable MDD_OP op, ref DDContext ctx) @safe
 
 MDD apply(MDD X, MDD Y, immutable MDD_OP op, ref DDContext ctx) @safe
 {
-    // assert(X.bound == Y.bound,
-    //        "MDDs must have the same bound for apply: "
-    //        ~ to!string(X.bound)
-    //        ~ " != "
-    //        ~ to!string(Y.bound)
-    //        );
-
     if(X.isTerminal && Y.isTerminal) return boolApply(X, Y, op);
 
     // TODO cache
@@ -39,8 +32,13 @@ MDD apply(MDD X, MDD Y, immutable MDD_OP op, ref DDContext ctx) @safe
     MDD res = MDD(d, ctx);
 
     foreach(i; iota(0,d)) {
-        MDD nX = X.isTerminal() ? X : X.getEdge(i);
-        MDD nY = Y.isTerminal() ? Y : Y.getEdge(i);
+        debug{ import std.stdio;
+            writeln("---");
+            writeln(to!string(X.id) ~": "~to!string(X.level));
+            writeln(to!string(Y.id) ~": "~to!string(Y.level));
+        }
+        MDD nX = (X.level < Y.level) ? X : X.getEdge(i);
+        MDD nY = (X.level > Y.level) ? Y : Y.getEdge(i);
         res.createEdge(i, apply(nX, nY, op, ctx));
     }
 
@@ -79,16 +77,18 @@ unittest {
     auto t = TT();
     auto f = FF();
     auto n = Node(2, ctx.nextID());
+    auto dummy = Node(2, ctx.nextID());
 
+    dummy.createEdge(0, asMDD(t));
+    dummy.createEdge(1, asMDD(t));
     n.createEdge(0, asMDD(f));
-    n.createEdge(1, asMDD(t));
+    n.createEdge(1, asMDD(dummy));
     X.createEdge(0, asMDD(f));
     X.createEdge(1, asMDD(n));
 
     auto Y = MDD(2, ctx);
     Y.createEdge(0, asMDD(f));
     Y.createEdge(1, asMDD(t));
-
 
     import dd.dot;
     auto rX = ROMDD(X);
