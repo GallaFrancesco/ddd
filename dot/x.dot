@@ -1,0 +1,6 @@
+digraph G{
+n2_3 -> n3_2 [label = 1 ]
+n3_2 -> n4_1 [label = 1 ]
+n4_1 -> nT_0 [label = 0 ]
+n4_1 -> nT_0 [label = 1 ]
+}
