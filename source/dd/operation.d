@@ -6,24 +6,34 @@ import std.range;
 import std.traits;
 import std.conv;
 
-
 /**
  * MDD Operations
- * - References: miner notes, thesis 
+ * - References: Decision Diagrams: Constraints and Algorithms, G. Perez
  */
-enum MDD_OP {
+enum MDD_BINOP {
     UNION="||",
-    INTERSECTION="&&"
+    INTERSECTION="&&",
+    PLUS="+",
+    MINUS="-",
+    MULT="*",
+    DIV="/",
+    MODULO="%",
+    EQ="==",
+    NE="!=",
+    LT="<",
+    GT=">",
+    LE="<=",
+    GE=">="
 }
 
 // TODO cache computation results (processed table, unique table)
 // currently this algorithm builds a reduced MDD out of the result RES
-ROMDD apply(ROMDD X, ROMDD Y, immutable MDD_OP op, ref DDContext ctx) @safe
+ROMDD apply(ROMDD X, ROMDD Y, immutable MDD_BINOP op, ref DDContext ctx) @safe
 {
     return ROMDD(apply(X.mdd, Y.mdd, op, ctx));
 }
 
-MDD apply(MDD X, MDD Y, immutable MDD_OP op, ref DDContext ctx) @safe
+MDD apply(MDD X, MDD Y, immutable MDD_BINOP op, ref DDContext ctx) @safe
 {
     if(X.isTerminal && Y.isTerminal) return boolApply(X, Y, op);
 
@@ -45,13 +55,13 @@ MDD apply(MDD X, MDD Y, immutable MDD_OP op, ref DDContext ctx) @safe
     return res;
 }
 
-MDD boolApply(MDD X, MDD Y, immutable MDD_OP op) @safe
+MDD boolApply(MDD X, MDD Y, immutable MDD_BINOP op) @safe
 {
     assert(X.isTerminal() && Y.isTerminal(), "boolApply must be called on two terminal nodes");
 
-    bool res = true;
+    int res = true;
     switch_op: final switch(op) {
-        static foreach(_oper; EnumMembers!MDD_OP) {
+        static foreach(_oper; EnumMembers!MDD_BINOP) {
         case _oper:
             import std.stdio;
             mixin("res = X.value "~cast(string)_oper~" Y.value;");
@@ -66,10 +76,10 @@ unittest {
 
     // boolean apply
     assert(boolApply(asMDD(TT()), asMDD(FF()),
-                     MDD_OP.UNION) == asMDD(TT()));
+                     MDD_BINOP.UNION) == asMDD(TT()));
 
     assert(boolApply(asMDD(TT()), asMDD(FF()),
-                     MDD_OP.INTERSECTION) == asMDD(FF()));
+                     MDD_BINOP.INTERSECTION) == asMDD(FF()));
 
     // BDD/MDD apply
     DDContext ctx;
@@ -93,7 +103,7 @@ unittest {
     import dd.dot;
     auto rX = ROMDD(X);
     auto rY = ROMDD(Y);
-    auto res = apply(rX, rY, MDD_OP.UNION, ctx);
+    auto res = apply(rX, rY, MDD_BINOP.NE, ctx);
 
     auto dot = "x.dot";
     writeln("[dot] Saving file: "~dot);
@@ -103,7 +113,7 @@ unittest {
     writeln("[dot] Saving file: "~dot);
     rY.printDot(dot);
 
-    dot = "apply_union_robdd.dot";
+    dot = "apply_romdd.dot";
     writeln("[dot] Saving file: "~dot);
     res.printDot(dot);
 }

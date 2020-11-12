@@ -166,7 +166,8 @@ struct MDD
                       (Node n) {
                           writeln("LEVEL: "~to!string(n.level));
                           writeln(recur~to!string(n));
-                          writeln(recur~"-> with edges to: "~to!string(n.children));
+                          writeln(recur~"-> with edges to: "
+                                  ~to!string(n.children));
                           foreach(nn; n.children) {
                               _dumpDDImpl(nn, recur~"+ ");
                           }
