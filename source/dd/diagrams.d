@@ -262,12 +262,12 @@ unittest
     assert(rn.id == 5);
 
     import dd.dot;
-    string dot = "bdd.dot";
+    string dot = "dot/bdd.dot";
     writeln("[dot] Saving file: "~dot);
     bdd.printDot(dot);
 
     auto robdd = ROMDD(bdd);
-    dot = "robdd.dot";
+    dot = "dot/robdd.dot";
     writeln("[dot] Saving file: "~dot);
     robdd.printDot(dot);
 }

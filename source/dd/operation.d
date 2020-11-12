@@ -42,11 +42,11 @@ MDD apply(MDD X, MDD Y, immutable MDD_BINOP op, ref DDContext ctx) @safe
     MDD res = MDD(d, ctx);
 
     foreach(i; iota(0,d)) {
-        debug{ import std.stdio;
-            writeln("---");
-            writeln(to!string(X.id) ~": "~to!string(X.level));
-            writeln(to!string(Y.id) ~": "~to!string(Y.level));
-        }
+        // debug{ import std.stdio;
+        //     writeln("---");
+        //     writeln(to!string(X.id) ~": "~to!string(X.level));
+        //     writeln(to!string(Y.id) ~": "~to!string(Y.level));
+        // }
         MDD nX = (X.level < Y.level) ? X : X.getEdge(i);
         MDD nY = (X.level > Y.level) ? Y : Y.getEdge(i);
         res.createEdge(i, apply(nX, nY, op, ctx));
@@ -105,15 +105,15 @@ unittest {
     auto rY = ROMDD(Y);
     auto res = apply(rX, rY, MDD_BINOP.NE, ctx);
 
-    auto dot = "x.dot";
+    auto dot = "dot/x.dot";
     writeln("[dot] Saving file: "~dot);
     rX.printDot(dot);
 
-    dot = "y.dot";
+    dot = "dot/y.dot";
     writeln("[dot] Saving file: "~dot);
     rY.printDot(dot);
 
-    dot = "apply_romdd.dot";
+    dot = "dot/apply_romdd.dot";
     writeln("[dot] Saving file: "~dot);
     res.printDot(dot);
 }
