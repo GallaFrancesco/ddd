@@ -5,7 +5,7 @@ all:
 release:
 	@dub build -b release
 test:
-	@dub test; for df in ${DOT}; do echo -n "[dot] Processing: $$df... "; ./dot2pdf.sh $$df; done;
+	@dub test; for df in ${DOT}; do echo -n "[dot] Processing: dot/$$df... "; ./dot2pdf.sh dot/$$df; done;
 upgrade:
 	@dub upgrade
 clean:
